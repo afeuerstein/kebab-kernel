@@ -11,6 +11,13 @@ on:
         options:
           - manual
           - monthly
+  push:
+    branches:
+      - lineage-24.0
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+      - '**.md'
   schedule:
     # Run on the 1st of every month at 00:00 UTC
     - cron: '0 0 1 * *'
@@ -143,7 +150,7 @@ jobs:
           retention-days: 30
 
       - name: Create release
-        if: github.ref == 'refs/heads/lineage-24.0' && (github.event_name == 'schedule' || inputs.release_type == 'monthly' || inputs.release_type == 'manual')
+        if: github.ref == 'refs/heads/lineage-24.0' && (github.event_name == 'schedule' || github.event_name == 'push' || inputs.release_type == 'monthly' || inputs.release_type == 'manual')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: kernel-${{ github.run_number }}
@@ -154,7 +161,7 @@ jobs:
             **Build Date:** $(date +%Y-%m-%d)
             **Architecture:** arm64
             **Defconfig:** ${DEFCONFIG}
-            **Release Type:** ${{ inputs.release_type || 'scheduled' }}
+            **Release Type:** ${{ inputs.release_type || github.event_name || 'push' }}
             **Workflow Run:** ${{ github.run_number }}
             
             **Assets:**
@@ -180,6 +187,6 @@ jobs:
             out/*.sha256
             kernel-*.zip
           draft: false
-          prerelease: ${{ inputs.release_type != 'monthly' }}
+          prerelease: ${{ inputs.release_type != 'monthly' && github.event_name != 'schedule' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
