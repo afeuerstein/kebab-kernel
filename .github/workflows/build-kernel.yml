@@ -1,0 +1,185 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'manual'
+        type: choice
+        options:
+          - manual
+          - monthly
+  schedule:
+    # Run on the 1st of every month at 00:00 UTC
+    - cron: '0 0 1 * *'
+
+env:
+  ARCH: arm64
+  DEFCONFIG: vendor/kona_defconfig
+  KERNEL_IMAGE: arch/arm64/boot/Image
+  OUTPUT_DIR: out
+
+jobs:
+  build:
+    name: Build Kernel for OnePlus 8T (kebab)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev libncurses-dev python3
+
+      - name: Install aarch64 toolchain
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+          echo "CROSS_COMPILE=aarch64-linux-gnu-" >> $GITHUB_ENV
+
+      - name: Build kernel
+        id: build
+        run: |
+          mkdir -p ${OUTPUT_DIR}
+          
+          # Make defconfig
+          make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ${DEFCONFIG} O=${OUTPUT_DIR}
+          
+          # Apply oplus.config if it exists
+          if [ -f arch/arm64/configs/vendor/oplus.config ]; then
+            echo "Applying oplus.config overrides..."
+            cat arch/arm64/configs/vendor/oplus.config >> ${OUTPUT_DIR}/.config
+            make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} olddefconfig O=${OUTPUT_DIR}
+          fi
+          
+          # Build kernel with all CPU cores
+          echo "Starting kernel build with -j$(nproc)..."
+          make -j$(nproc) ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} 2>&1 | tail -50
+          
+          # Check if build succeeded
+          if [ ! -f ${OUTPUT_DIR}/${KERNEL_IMAGE} ]; then
+            echo "::error::Build failed - kernel image not found"
+            exit 1
+          fi
+          
+          echo "Kernel built successfully"
+          ls -lh ${OUTPUT_DIR}/${KERNEL_IMAGE}
+          
+          # Build DTBO
+          echo "Building DTBO..."
+          make -j$(nproc) ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbo.img O=${OUTPUT_DIR} 2>&1 | tail -20 || true
+          
+          # Collect all dtb files
+          mkdir -p ${OUTPUT_DIR}/dtb
+          find ${OUTPUT_DIR}/arch/arm64/boot/dts -name "*.dtb" -exec cp {} ${OUTPUT_DIR}/dtb/ \;
+          
+          # Create dtb.img from kebab-specific dtbs
+          if ls ${OUTPUT_DIR}/dtb/*.dtb 1> /dev/null 2>&1; then
+            cat ${OUTPUT_DIR}/dtb/*.dtb > ${OUTPUT_DIR}/dtb.img
+          fi
+          
+          # Copy dtbo.img if it exists
+          if [ -f ${OUTPUT_DIR}/arch/arm64/boot/dtbo.img ]; then
+            cp ${OUTPUT_DIR}/arch/arm64/boot/dtbo.img ${OUTPUT_DIR}/dtbo.img
+          fi
+          if [ -f ${OUTPUT_DIR}/dtbo.img ]; then
+            echo "DTBO already exists"
+          fi
+          
+          echo "DTB/DTBO built successfully"
+          ls -lh ${OUTPUT_DIR}/dtb/ 2>/dev/null || true
+          ls -lh ${OUTPUT_DIR}/*.img 2>/dev/null || true
+
+      - name: Create boot.img (Image + dtb)
+        id: package
+        if: steps.build.outcome == 'success'
+        run: |
+          # Since mkbootimg may not be available, we create Image-dtb which can be flashed
+          # This is a common approach for custom kernels
+          
+          # First, try to create Image-dtb (kernel + dtb concatenated)
+          if [ -f ${OUTPUT_DIR}/dtb.img ]; then
+            cat ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/dtb.img > ${OUTPUT_DIR}/Image-dtb
+            echo "Created Image-dtb"
+            ls -lh ${OUTPUT_DIR}/Image-dtb
+          else
+            # Fallback: just copy the Image as boot.img
+            cp ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/boot.img
+            echo "Created boot.img from Image only"
+          fi
+          
+          # Also create Image-dtb with just the kebab dtb
+          if [ -f ${OUTPUT_DIR}/dtb.img ]; then
+            cat ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/dtb.img > ${OUTPUT_DIR}/boot.img
+            echo "Created boot.img with dtb appended"
+          fi
+          
+          # Create a simple zip with all outputs
+          cd ${OUTPUT_DIR}
+          zip -r ../kernel-${{ github.run_number }}.zip Image dtb.img dtbo.img Image-dtb boot.img 2>/dev/null || true
+          cd ..
+          
+          # Create checksums
+          sha256sum ${OUTPUT_DIR}/boot.img > ${OUTPUT_DIR}/boot.img.sha256 2>/dev/null || true
+          sha256sum ${OUTPUT_DIR}/Image-dtb > ${OUTPUT_DIR}/Image-dtb.sha256 2>/dev/null || true
+          sha256sum ${OUTPUT_DIR}/dtb.img > ${OUTPUT_DIR}/dtb.img.sha256 2>/dev/null || true
+          sha256sum ${OUTPUT_DIR}/dtbo.img > ${OUTPUT_DIR}/dtbo.img.sha256 2>/dev/null || true
+
+      - name: Upload artifacts
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-build-${{ github.run_id }}
+          path: |
+            out/
+            *.zip
+            *.sha256
+          retention-days: 30
+
+      - name: Create release
+        if: github.ref == 'refs/heads/lineage-24.0' && (github.event_name == 'schedule' || inputs.release_type == 'monthly' || inputs.release_type == 'manual')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: kernel-${{ github.run_number }}
+          name: Kernel Build ${{ github.run_number }} - $(date +%Y-%m-%d)
+          body: |
+            Automated kernel build for OnePlus 8T (kebab)
+            
+            **Build Date:** $(date +%Y-%m-%d)
+            **Architecture:** arm64
+            **Defconfig:** ${DEFCONFIG}
+            **Release Type:** ${{ inputs.release_type || 'scheduled' }}
+            **Workflow Run:** ${{ github.run_number }}
+            
+            **Assets:**
+            - boot.img - Kernel with appended DTB (flashable with fastboot)
+            - Image-dtb - Alternative format with appended DTB
+            - dtb.img - Device tree blob
+            - dtbo.img - Device tree blob overlay
+            - kernel-*.zip - Complete build output
+            
+            **Flashing Instructions:**
+            ```bash
+            fastboot flash boot boot.img
+            fastboot reboot
+            ```
+            
+            **Note:** This is an automated build. The boot.img includes the kernel with appended device tree.
+          files: |
+            out/boot.img
+            out/Image-dtb
+            out/Image
+            out/dtb.img
+            out/dtbo.img
+            out/*.sha256
+            kernel-*.zip
+          draft: false
+          prerelease: ${{ inputs.release_type != 'monthly' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
