@@ -65,13 +65,14 @@ jobs:
             make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} olddefconfig O=${OUTPUT_DIR}
           fi
           
-          # Build kernel with all CPU cores
+          # Build kernel with all CPU cores - explicitly target Image
           echo "Starting kernel build with -j$(nproc)..."
-          make -j$(nproc) ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} 2>&1 | tail -50
+          make -j$(nproc) ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} Image O=${OUTPUT_DIR} 2>&1 | tail -50
           
           # Check if build succeeded
           if [ ! -f ${OUTPUT_DIR}/${KERNEL_IMAGE} ]; then
             echo "::error::Build failed - kernel image not found"
+            ls -la ${OUTPUT_DIR}/arch/arm64/boot/ 2>/dev/null || true
             exit 1
           fi
           
@@ -82,21 +83,22 @@ jobs:
           echo "Building DTBO..."
           make -j$(nproc) ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbo.img O=${OUTPUT_DIR} 2>&1 | tail -20 || true
           
-          # Collect all dtb files
+          # Collect all dtb files from kebab directory
           mkdir -p ${OUTPUT_DIR}/dtb
-          find ${OUTPUT_DIR}/arch/arm64/boot/dts -name "*.dtb" -exec cp {} ${OUTPUT_DIR}/dtb/ \;
+          find ${OUTPUT_DIR}/arch/arm64/boot/dts/vendor/oplus/kebab -name "*.dtb" -exec cp {} ${OUTPUT_DIR}/dtb/ \; 2>/dev/null || true
+          find ${OUTPUT_DIR}/arch/arm64/boot/dts/vendor/oplus -name "*.dtb" -exec cp {} ${OUTPUT_DIR}/dtb/ \; 2>/dev/null || true
+          find ${OUTPUT_DIR}/arch/arm64/boot/dts -name "*.dtb" -exec cp {} ${OUTPUT_DIR}/dtb/ \; 2>/dev/null || true
           
-          # Create dtb.img from kebab-specific dtbs
+          # Create dtb.img from collected dtbs
           if ls ${OUTPUT_DIR}/dtb/*.dtb 1> /dev/null 2>&1; then
             cat ${OUTPUT_DIR}/dtb/*.dtb > ${OUTPUT_DIR}/dtb.img
+            echo "Created dtb.img from $(ls ${OUTPUT_DIR}/dtb/*.dtb | wc -l) dtb files"
           fi
           
           # Copy dtbo.img if it exists
           if [ -f ${OUTPUT_DIR}/arch/arm64/boot/dtbo.img ]; then
             cp ${OUTPUT_DIR}/arch/arm64/boot/dtbo.img ${OUTPUT_DIR}/dtbo.img
-          fi
-          if [ -f ${OUTPUT_DIR}/dtbo.img ]; then
-            echo "DTBO already exists"
+            echo "Copied dtbo.img"
           fi
           
           echo "DTB/DTBO built successfully"
@@ -107,24 +109,24 @@ jobs:
         id: package
         if: steps.build.outcome == 'success'
         run: |
-          # Since mkbootimg may not be available, we create Image-dtb which can be flashed
-          # This is a common approach for custom kernels
+          # Create Image-dtb (kernel + dtb concatenated)
+          # This is a common approach for custom kernels and can be flashed directly
           
-          # First, try to create Image-dtb (kernel + dtb concatenated)
           if [ -f ${OUTPUT_DIR}/dtb.img ]; then
             cat ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/dtb.img > ${OUTPUT_DIR}/Image-dtb
             echo "Created Image-dtb"
             ls -lh ${OUTPUT_DIR}/Image-dtb
           else
-            # Fallback: just copy the Image as boot.img
-            cp ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/boot.img
-            echo "Created boot.img from Image only"
+            echo "No dtb.img found, creating boot.img from Image only"
           fi
           
-          # Also create Image-dtb with just the kebab dtb
+          # Always create boot.img as Image + dtb
           if [ -f ${OUTPUT_DIR}/dtb.img ]; then
             cat ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/dtb.img > ${OUTPUT_DIR}/boot.img
             echo "Created boot.img with dtb appended"
+          else
+            cp ${OUTPUT_DIR}/${KERNEL_IMAGE} ${OUTPUT_DIR}/boot.img
+            echo "Created boot.img from Image only (no dtb)"
           fi
           
           # Create a simple zip with all outputs
