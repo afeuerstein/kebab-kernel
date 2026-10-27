@@ -55,6 +55,27 @@ jobs:
           python3 /tmp/mkbootimg/mkbootimg.py --help > /dev/null
           python3 /tmp/libufdt/utils/src/mkdtboimg.py help > /dev/null
 
+      - name: Fetch official LineageOS kebab boot.img (for ramdisk)
+        run: |
+          # kebab keeps its generic ramdisk in boot.img; reuse the official
+          # one so the image is bootable.
+          python3 - <<'EOF'
+          import json, urllib.request
+          builds = json.load(urllib.request.urlopen(
+              "https://download.lineageos.org/api/v2/devices/kebab/builds",
+              timeout=60))
+          build = builds[0]
+          boot = next(f for f in build["files"] if f["filename"] == "boot.img")
+          url = "https://mirrorbits.lineageos.org" + boot["filepath"]
+          with urllib.request.urlopen(url, timeout=300) as r, \
+               open("/tmp/los-boot.img", "wb") as f:
+              f.write(r.read())
+          print("downloaded official boot.img from", build["date"])
+          EOF
+          python3 /tmp/mkbootimg/unpack_bootimg.py --boot_img /tmp/los-boot.img \
+            --out /tmp/los-unpack | head -20
+          test -s /tmp/los-unpack/ramdisk
+
       - name: Build kernel (vendor/kona-perf_defconfig + vendor/oplus.config)
         run: |
           export PATH=/tmp/clang/clang-r450784d/bin:/tmp/gcc49/bin:$PATH
@@ -83,20 +104,15 @@ jobs:
               out/arch/arm64/boot/dts/vendor/oplus/kona-v2.1.dtb \
               > out/boot_out/dtb.img
 
-          # Minimal empty ramdisk (LZ4), so the image flashes cleanly over the
-          # stock boot partition without touching the real ramdisk contents.
-          : > out/boot_out/ramdisk.cpio
-          lz4 -q -f out/boot_out/ramdisk.cpio out/boot_out/ramdisk.cpio.lz4
-
           python3 /tmp/mkbootimg/mkbootimg.py \
             --kernel out/arch/arm64/boot/Image \
-            --ramdisk out/boot_out/ramdisk.cpio.lz4 \
+            --ramdisk /tmp/los-unpack/ramdisk \
             --dtb out/boot_out/dtb.img \
             --header_version 2 \
             --base 0x00000000 \
             --pagesize 4096 \
-            --os_version 13 \
-            --os_patch_level 2023-11-05 \
+            --os_version 17 \
+            --os_patch_level 2026-10-01 \
             --cmdline "androidboot.hardware=qcom androidboot.memcg=1 androidboot.usbcontroller=a600000.dwc3 cgroup.memory=nokmem,nosocket loop.max_part=7 lpm_levels.sleep_disabled=1 msm_rtb.filter=0x237 reboot=panic_warm service_locator.enable=1 swiotlb=2048" \
             -o out/boot_out/boot.img
 
