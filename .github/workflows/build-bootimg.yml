@@ -1,0 +1,121 @@
+name: Build kebab boot.img
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "lineage-*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential cpio flex \
+            libssl-dev python3 device-tree-compiler xz-utils lz4
+
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+
+      - name: Download Android clang (r450784d)
+        run: |
+          git clone --filter=blob:none --no-checkout --depth 1 \
+            -b android-13.0.0_r83 \
+            https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 \
+            /tmp/clang
+          cd /tmp/clang
+          git sparse-checkout init --cone
+          git sparse-checkout set clang-r450784d
+          git checkout
+          clang-r450784d/bin/clang --version | head -1
+
+      - name: Download GCC 4.9 cross binutils
+        run: |
+          # Current AOSP tip removed the GCC 4.9 prebuilts; check out the last
+          # revision that still carries the aarch64 binutils (as/ld), which
+          # the 4.19 Qualcomm kernel build expects via CROSS_COMPILE.
+          git clone --filter=blob:none --no-checkout \
+            https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
+            /tmp/gcc49
+          git -C /tmp/gcc49 checkout f0d812a~1
+          /tmp/gcc49/bin/aarch64-linux-android-as --version | head -1
+
+      - name: Get mkbootimg and mkdtboimg
+        run: |
+          git clone --depth 1 \
+            https://android.googlesource.com/platform/system/tools/mkbootimg \
+            /tmp/mkbootimg
+          git clone --depth 1 \
+            https://android.googlesource.com/platform/system/libufdt \
+            /tmp/libufdt
+          python3 /tmp/mkbootimg/mkbootimg.py --help > /dev/null
+          python3 /tmp/libufdt/utils/src/mkdtboimg.py help > /dev/null
+
+      - name: Build kernel (vendor/kona-perf_defconfig + vendor/oplus.config)
+        run: |
+          export PATH=/tmp/clang/clang-r450784d/bin:/tmp/gcc49/bin:$PATH
+          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+            CROSS_COMPILE=aarch64-linux-android- \
+            vendor/kona-perf_defconfig vendor/oplus.config
+          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 \
+            CROSS_COMPILE=aarch64-linux-android- \
+            -j"$(nproc)" Image dtbs
+
+      - name: Build dtbo.img
+        run: |
+          mkdir -p out/dtbo_out
+          python3 /tmp/libufdt/utils/src/mkdtboimg.py create out/dtbo_out/dtbo.img \
+            --page_size=4096 \
+            out/arch/arm64/boot/dts/vendor/oplus/kona-kebab-overlay.dtbo
+          ls -la out/dtbo_out/dtbo.img
+
+      - name: Pack boot.img
+        run: |
+          mkdir -p out/boot_out
+          # DTB payload: the three kona base DTBs shipped in the kebab
+          # boot image (the bootloader applies the kebab overlay from dtbo).
+          cat out/arch/arm64/boot/dts/vendor/oplus/kona.dtb \
+              out/arch/arm64/boot/dts/vendor/oplus/kona-v2.dtb \
+              out/arch/arm64/boot/dts/vendor/oplus/kona-v2.1.dtb \
+              > out/boot_out/dtb.img
+
+          # Minimal empty ramdisk (LZ4), so the image flashes cleanly over the
+          # stock boot partition without touching the real ramdisk contents.
+          : > out/boot_out/ramdisk.cpio
+          lz4 -q -f out/boot_out/ramdisk.cpio out/boot_out/ramdisk.cpio.lz4
+
+          python3 /tmp/mkbootimg/mkbootimg.py \
+            --kernel out/arch/arm64/boot/Image \
+            --ramdisk out/boot_out/ramdisk.cpio.lz4 \
+            --dtb out/boot_out/dtb.img \
+            --header_version 2 \
+            --base 0x00000000 \
+            --pagesize 4096 \
+            --os_version 13 \
+            --os_patch_level 2023-11-05 \
+            --cmdline "androidboot.hardware=qcom androidboot.memcg=1 androidboot.usbcontroller=a600000.dwc3 cgroup.memory=nokmem,nosocket loop.max_part=7 lpm_levels.sleep_disabled=1 msm_rtb.filter=0x237 reboot=panic_warm service_locator.enable=1 swiotlb=2048" \
+            -o out/boot_out/boot.img
+
+          ls -la out/boot_out/boot.img
+
+      - name: Verify boot.img
+        run: |
+          python3 /tmp/mkbootimg/unpack_bootimg.py --boot_img out/boot_out/boot.img --out /tmp/unpack | head -20
+
+      - name: Upload boot.img
+        uses: actions/upload-artifact@v4
+        with:
+          name: kebab-boot-img
+          path: out/boot_out/boot.img
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload dtbo.img
+        uses: actions/upload-artifact@v4
+        with:
+          name: kebab-dtbo-img
+          path: out/dtbo_out/dtbo.img
+          compression-level: 0
+          if-no-files-found: error
