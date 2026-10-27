@@ -3,6 +3,8 @@ name: Build kebab boot.img
 on:
   workflow_dispatch:
   push:
+    branches: [ "lineage-*", "vibe/*" ]
+  pull_request:
     branches: [ "lineage-*" ]
 
 jobs:
