@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flsh.me — DUST HANGAR</title>
+<meta name="description" content="flsh.me concept 01 — a flashbang in a dusty hangar. Click to throw.">
+<style>
+@font-face{font-family:'Black Ops One';src:url('/vendor/fonts/black-ops-one-latin-400-normal.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Share Tech Mono';src:url('/vendor/fonts/share-tech-mono-latin-400-normal.woff2') format('woff2')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#0a0806}
+canvas{display:block}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:40;
+  background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.55) 100%)}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:50;color:#e8e2d4;font-family:'Share Tech Mono',monospace}
+#title{position:absolute;left:5vw;top:9vh;pointer-events:none}
+#title .over{font-size:11px;letter-spacing:.55em;color:#c8a24a;text-transform:uppercase}
+#title h1{font-family:'Black Ops One',cursive;font-size:clamp(52px,9vw,124px);line-height:.95;
+  color:#f2ede0;text-transform:uppercase;letter-spacing:.01em;
+  text-shadow:0 2px 0 #6b5320,0 10px 40px rgba(0,0,0,.7)}
+#title .sub{margin-top:14px;font-size:12px;letter-spacing:.3em;color:rgba(232,226,212,.6);text-transform:uppercase}
+#throw{position:absolute;right:5vw;bottom:12vh;text-align:right}
+#throw .k{font-size:11px;letter-spacing:.4em;color:#c8a24a;text-transform:uppercase}
+#throw .b{margin-top:10px;display:inline-block;padding:14px 26px;border:1px solid rgba(242,237,224,.5);
+  font-size:13px;letter-spacing:.35em;text-transform:uppercase;color:#f2ede0;background:rgba(10,8,6,.35);
+  backdrop-filter:blur(4px);cursor:pointer;transition:.2s}
+#throw .b:hover{background:#f2ede0;color:#0a0806;border-color:#f2ede0}
+#nade{position:absolute;left:5vw;bottom:12vh;font-size:11px;letter-spacing:.3em;color:rgba(232,226,212,.5);text-transform:uppercase}
+#nade b{color:#c8a24a}
+#flashes{position:absolute;right:5vw;top:9vh;font-size:11px;letter-spacing:.3em;color:rgba(232,226,212,.55);text-transform:uppercase;text-align:right}
+#tinnitus{position:fixed;inset:0;pointer-events:none;z-index:55;opacity:0;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(255,255,255,.16) 100%)}
+</style>
+</head>
+<body>
+<div id="vignette"></div>
+<div id="tinnitus"></div>
+<div id="hud">
+  <div id="title">
+    <div class="over">concept 01 — de_dust hangar</div>
+    <h1>FLSH<br>ME</h1>
+    <div class="sub">a flashbang, up close. click to throw it.</div>
+  </div>
+  <div id="flashes">flashbangs thrown <b id="cnt" style="color:#c8a24a">0</b></div>
+  <div id="nade">nade: <b>M67 flashbang</b> · pin pulled on click</div>
+  <div id="throw"><div class="k">throw</div><button class="b" id="btn">— click anywhere —</button></div>
+</div>
+<script type="importmap">
+{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/jsm/"}}
+</script>
+<script type="module" src="/sites/dust-hangar/main.js"></script>
+</body>
+</html>

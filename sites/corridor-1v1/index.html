@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flsh.me — CORRIDOR 1V1</title>
+<meta name="description" content="flsh.me concept 03 — you are holding the corridor. Someone throws a flash in your face.">
+<style>
+@font-face{font-family:'Black Ops One';src:url('/vendor/fonts/black-ops-one-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Share Tech Mono';src:url('/vendor/fonts/share-tech-mono-latin-400-normal.woff2') format('woff2')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#050505;cursor:crosshair}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:50;color:#e8e6df;font-family:'Share Tech Mono',monospace}
+#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px}
+#cross:before,#cross:after{content:'';position:absolute;background:rgba(255,255,255,.85);box-shadow:0 0 4px #000}
+#cross:before{left:50%;top:0;width:1px;height:100%;transform:translateX(-.5px)}
+#cross:after{top:50%;left:0;height:1px;width:100%;transform:translateY(-.5px)}
+#cross .dot{position:absolute;left:50%;top:50%;width:3px;height:3px;background:#ff5d3a;transform:translate(-50%,-50%);border-radius:50%}
+#bottomL{position:absolute;left:26px;bottom:24px;font-size:13px;letter-spacing:.2em;line-height:1.9;text-transform:uppercase}
+#bottomL .hp{color:#7dffa8;font-size:26px}#bottomL .ar{color:#7db8ff;font-size:26px}
+#bottomR{position:absolute;right:26px;bottom:24px;font-size:13px;letter-spacing:.2em;text-align:right;line-height:1.9;text-transform:uppercase}
+#bottomR .ammo{font-size:26px;color:#e8e6df}#bottomR .ammo small{font-size:13px;color:rgba(232,230,223,.5)}
+#topC{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.35em;color:rgba(232,230,223,.65);text-transform:uppercase}
+#flashResult{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .4s}
+#flashResult .big{font-family:'Black Ops One';font-size:clamp(34px,6vw,72px);color:#fff;text-transform:uppercase;text-shadow:0 0 30px rgba(255,255,255,.6)}
+#flashResult .sub{margin-top:10px;font-size:12px;letter-spacing:.4em;color:rgba(255,255,255,.75);text-transform:uppercase}
+#tag{position:absolute;left:26px;top:20px;font-size:10px;letter-spacing:.3em;color:rgba(232,230,223,.45);text-transform:uppercase;line-height:2}
+#tag .over{color:#c8a24a}
+#muzzle{position:fixed;inset:0;pointer-events:none;z-index:48;background:radial-gradient(circle at 50% 55%,rgba(255,220,150,.9),rgba(255,150,50,.25) 22%,transparent 45%);opacity:0}
+</style>
+</head>
+<body>
+<div id="muzzle"></div>
+<div id="hud">
+  <div id="cross"><div class="dot"></div></div>
+  <div id="tag"><span class="over">concept 03 — corridor 1v1</span><br>you vs the flasher</div>
+  <div id="topC">round 7 · holding mid corridor</div>
+  <div id="bottomL"><span class="hp">100</span> health<br><span class="ar">87</span> armor</div>
+  <div id="bottomR"><span class="ammo">24</span><small> / 90</small><br>usp-s · click to fire</div>
+  <div id="flashResult"><div class="big">flashed</div><div class="sub" id="flashMs">blind for 4.21s</div></div>
+</div>
+<script type="importmap">
+{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/jsm/"}}
+</script>
+<script type="module" src="/sites/corridor-1v1/main.js"></script>
+</body>
+</html>

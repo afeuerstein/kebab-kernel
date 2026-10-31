@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flsh.me — STUDIO FLASH</title>
+<meta name="description" content="flsh.me concept 04 — a product landing page for a flashbang, shot like a studio product film.">
+<style>
+@font-face{font-family:'Space Grotesk';src:url('/vendor/fonts/space-grotesk-latin-400-normal.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Space Grotesk';src:url('/vendor/fonts/space-grotesk-latin-700-normal.woff2') format('woff2');font-weight:700}
+@font-face{font-family:'Instrument Serif';src:url('/vendor/fonts/instrument-serif-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Instrument Serif';src:url('/vendor/fonts/instrument-serif-latin-400-italic.woff2') format('woff2');font-style:italic}
+@font-face{font-family:'Share Tech Mono';src:url('/vendor/fonts/share-tech-mono-latin-400-normal.woff2') format('woff2')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#0b0b0c;color:#f4f1ea;font-family:'Space Grotesk',sans-serif}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:50}
+nav{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+  padding:26px 4vw;font-size:12px;letter-spacing:.3em;text-transform:uppercase}
+nav .logo{font-weight:700;font-size:15px;letter-spacing:.42em}
+nav .logo i{font-style:normal;color:#ff4d2e}
+nav .links span{margin-left:28px;opacity:.6}
+#hero{position:absolute;left:4vw;top:50%;transform:translateY(-50%);max-width:560px}
+#hero .k{font-family:'Share Tech Mono';font-size:11px;letter-spacing:.5em;color:#ff4d2e;text-transform:uppercase}
+#hero h1{margin-top:16px;font-size:clamp(46px,6.4vw,92px);line-height:.98;font-weight:700;letter-spacing:-.02em}
+#hero h1 em{font-family:'Instrument Serif';font-style:italic;font-weight:400;color:#ffb59f}
+#hero p{margin-top:20px;font-size:16px;line-height:1.65;color:rgba(244,241,234,.66);max-width:44ch}
+#cta{margin-top:30px;display:inline-flex;gap:18px;align-items:center;pointer-events:auto}
+#cta button{cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+  padding:16px 28px;border:none;background:#f4f1ea;color:#0b0b0c;transition:.2s}
+#cta button:hover{background:#ff4d2e;color:#fff}
+#cta .ghost{background:none;border:1px solid rgba(244,241,234,.3);color:#f4f1ea}
+#cta .ghost:hover{border-color:#f4f1ea;background:rgba(255,255,255,.06)}
+#specs{position:absolute;right:4vw;bottom:8vh;text-align:right;font-family:'Share Tech Mono';font-size:11px;
+  letter-spacing:.22em;line-height:2.3;color:rgba(244,241,234,.55);text-transform:uppercase}
+#specs b{color:#f4f1ea}
+#swatch{position:absolute;left:4vw;bottom:8vh;display:flex;gap:10px;align-items:center;pointer-events:auto}
+#swatch .dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.2s}
+#swatch .dot:hover{transform:scale(1.15)}
+#swatch .dot.on{border-color:#f4f1ea}
+#swatch .lbl{font-family:'Share Tech Mono';font-size:10px;letter-spacing:.3em;color:rgba(244,241,234,.5);text-transform:uppercase;margin-right:6px}
+#counter{position:absolute;right:4vw;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;
+  font-family:'Share Tech Mono';font-size:10px;letter-spacing:.5em;color:rgba(244,241,234,.4);text-transform:uppercase}
+#scrollHint{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-family:'Share Tech Mono';
+  font-size:10px;letter-spacing:.45em;color:rgba(244,241,234,.4);text-transform:uppercase;animation:p 2.4s infinite}
+@keyframes p{0%,100%{opacity:.35}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div id="hud">
+  <nav>
+    <span class="logo">FLSH<i>.</i>ME</span>
+    <span class="links"><span>product</span><span>specs</span><span>film</span></span>
+  </nav>
+  <div id="hero">
+    <div class="k">the original flashbang — est. 1999</div>
+    <h1>Light, <em>weaponized.</em></h1>
+    <p>One pull of the pin and the room goes white. Meet the M67: a studio-grade burst of light, engineered for maximum disorientation and minimum apology.</p>
+    <div id="cta">
+      <button id="demoBtn">see it flash</button>
+      <button class="ghost">pre-order — $0</button>
+    </div>
+  </div>
+  <div id="counter">unit 0067 — flashbang mk.ii</div>
+  <div id="specs">
+    blast radius <b>10 m</b><br>
+    peak luminance <b>∞</b><br>
+    recovery time <b>4–7 s</b><br>
+    weight <b>167 g</b>
+  </div>
+  <div id="swatch">
+    <span class="lbl">finish</span>
+    <span class="dot on" data-c="#3d4a3a" style="background:#3d4a3a"></span>
+    <span class="dot" data-c="#23252a" style="background:#23252a"></span>
+    <span class="dot" data-c="#5a3a2e" style="background:#5a3a2e"></span>
+    <span class="dot" data-c="#2e4a5a" style="background:#2e4a5a"></span>
+  </div>
+  <div id="scrollHint">drag to rotate · click to detonate</div>
+</div>
+<script type="importmap">
+{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/jsm/"}}
+</script>
+<script type="module" src="/sites/studio-flash/main.js"></script>
+</body>
+</html>

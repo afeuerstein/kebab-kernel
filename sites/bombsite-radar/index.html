@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flsh.me — BOMBSITE RADAR</title>
+<meta name="description" content="flsh.me concept 02 — tactical radar view of a bombsite. Throw the flash from above.">
+<style>
+@font-face{font-family:'Black Ops One';src:url('/vendor/fonts/black-ops-one-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Share Tech Mono';src:url('/vendor/fonts/share-tech-mono-latin-400-normal.woff2') format('woff2')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#060807}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:50;color:#cfe3c8;font-family:'Share Tech Mono',monospace;
+  text-shadow:0 0 6px rgba(80,255,140,.35)}
+#top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+  padding:16px 22px;font-size:12px;letter-spacing:.25em;text-transform:uppercase;
+  background:linear-gradient(rgba(3,10,5,.85),transparent)}
+#top .brand{color:#7dffa8;font-family:'Black Ops One';font-size:15px;letter-spacing:.12em}
+#timer{font-size:22px;color:#eafff0;letter-spacing:.1em}
+#money{color:#ffd76a}
+#alive{color:#ff8d7a}
+#sites{position:absolute;top:70px;left:22px;font-size:11px;letter-spacing:.25em;line-height:2;text-transform:uppercase;color:rgba(207,227,200,.75)}
+#sites b{color:#ff5d3a}
+#feed{position:absolute;top:70px;right:22px;width:300px;font-size:11px;letter-spacing:.12em;line-height:1.9;text-align:right;text-transform:uppercase}
+#feed .f{opacity:0;transform:translateX(12px);transition:.3s}
+#feed .f.show{opacity:1;transform:none}
+#feed .me{color:#7dffa8}#feed .foe{color:#ff8d7a}
+#throwWrap{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:auto}
+#throwBtn{cursor:pointer;font-family:'Share Tech Mono';font-size:14px;letter-spacing:.4em;text-transform:uppercase;
+  color:#06120a;background:#7dffa8;border:none;padding:16px 34px 16px 40px;box-shadow:0 0 30px rgba(125,255,168,.35);
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);transition:.15s}
+#throwBtn:hover{background:#eafff0;box-shadow:0 0 46px rgba(125,255,168,.6)}
+#throwWrap .k{margin-top:10px;font-size:10px;letter-spacing:.4em;color:rgba(207,227,200,.5);text-transform:uppercase}
+#tag{position:absolute;left:22px;bottom:30px;font-size:10px;letter-spacing:.3em;color:rgba(207,227,200,.45);text-transform:uppercase;line-height:2}
+#tag .over{color:#7dffa8}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:45;mix-blend-mode:overlay;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(120,255,160,.05) 0 1px,transparent 1px 3px)}
+</style>
+</head>
+<body>
+<div id="scan"></div>
+<div id="hud">
+  <div id="top">
+    <span class="brand">FLSH://RADAR</span>
+    <span id="timer">1:55</span>
+    <span><span id="money">$16000</span> &nbsp;·&nbsp; <span id="alive">5 vs 5</span></span>
+  </div>
+  <div id="sites">sites<br><b>A</b> — long &nbsp;·&nbsp; <b>B</b> — tunnels</div>
+  <div id="feed"></div>
+  <div id="tag"><span class="over">concept 02 — bombsite radar</span><br>de_flsh · top-down · live</div>
+  <div id="throwWrap">
+    <button id="throwBtn">throw flashbang</button>
+    <div class="k">click anywhere or press F</div>
+  </div>
+</div>
+<script type="importmap">
+{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/jsm/"}}
+</script>
+<script type="module" src="/sites/bombsite-radar/main.js"></script>
+</body>
+</html>

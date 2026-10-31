@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flsh.me — five flashbangs</title>
+<meta name="description" content="flsh.me — five 3D, sound-on interpretations of the flashbang. Pick your favorite.">
+<style>
+@font-face{font-family:'Black Ops One';src:url('/vendor/fonts/black-ops-one-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Share Tech Mono';src:url('/vendor/fonts/share-tech-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Space Grotesk';src:url('/vendor/fonts/space-grotesk-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Instrument Serif';src:url('/vendor/fonts/instrument-serif-latin-400-italic.woff2') format('woff2');font-style:italic}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#070605;color:#efe9dc;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
+header{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:40px 20px}
+header .k{font-family:'Share Tech Mono';font-size:12px;letter-spacing:.6em;color:#c8a24a;text-transform:uppercase}
+header h1{font-family:'Black Ops One';font-size:clamp(64px,14vw,190px);line-height:.9;margin-top:18px;
+  text-shadow:0 4px 0 #5c4718,0 18px 60px rgba(0,0,0,.8)}
+header h1 em{font-family:'Instrument Serif';font-style:italic;font-weight:400;color:#e8c87a}
+header p{margin-top:26px;max-width:52ch;color:rgba(239,233,220,.6);font-size:16px;line-height:1.7}
+header .down{margin-top:54px;font-family:'Share Tech Mono';font-size:11px;letter-spacing:.5em;color:rgba(239,233,220,.45);text-transform:uppercase;animation:p 2.4s infinite}
+@keyframes p{0%,100%{opacity:.35;transform:translateY(0)}50%{opacity:1;transform:translateY(6px)}}
+#grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:rgba(239,233,220,.12);border-top:1px solid rgba(239,233,220,.12)}
+a.card{position:relative;display:block;aspect-ratio:4/3;background:#0c0a08;color:#efe9dc;text-decoration:none;overflow:hidden;transition:.35s}
+a.card:hover{background:#141009}
+a.card .num{position:absolute;top:18px;left:20px;font-family:'Share Tech Mono';font-size:11px;letter-spacing:.4em;color:#c8a24a}
+a.card .name{position:absolute;left:20px;bottom:52px;font-family:'Black Ops One';font-size:clamp(22px,2.6vw,32px);text-transform:uppercase;line-height:1.05}
+a.card .desc{position:absolute;left:20px;right:20px;bottom:20px;font-family:'Share Tech Mono';font-size:11px;letter-spacing:.12em;line-height:1.8;color:rgba(239,233,220,.55);text-transform:uppercase}
+a.card .go{position:absolute;top:16px;right:20px;font-family:'Share Tech Mono';font-size:11px;letter-spacing:.3em;color:rgba(239,233,220,.4);transition:.3s}
+a.card:hover .go{color:#e8c87a;transform:translateX(4px)}
+footer{padding:34px 20px;display:flex;justify-content:space-between;font-family:'Share Tech Mono';font-size:11px;letter-spacing:.3em;color:rgba(239,233,220,.4);text-transform:uppercase}
+</style>
+</head>
+<body>
+<header>
+  <div class="k">5 concepts · one flashbang</div>
+  <h1>FLSH<em>.me</em></h1>
+  <p>Five takes on the most infuriating grenade in Counter-Strike — each one fully 3D, each one with sound, each one a working flashbang you can throw at your own screen. Pick a door.</p>
+  <div class="down">▼ choose your flashbang ▼</div>
+</header>
+<div id="grid">
+  <a class="card" href="/sites/dust-hangar/">
+    <span class="num">01</span><span class="go">enter →</span>
+    <span class="name">Dust<br>Hangar</span>
+    <span class="desc">cinematic diorama · orbit the nade in a sunlit hangar · click to throw</span>
+  </a>
+  <a class="card" href="/sites/bombsite-radar/">
+    <span class="num">02</span><span class="go">enter →</span>
+    <span class="name">Bombsite<br>Radar</span>
+    <span class="desc">top-down tactical view · live round feed · enemies blink when flashed</span>
+  </a>
+  <a class="card" href="/sites/corridor-1v1/">
+    <span class="num">03</span><span class="go">enter →</span>
+    <span class="name">Corridor<br>1v1</span>
+    <span class="desc">first-person · you hold mid · the enemy throws the flash at YOU</span>
+  </a>
+  <a class="card" href="/sites/studio-flash/">
+    <span class="num">04</span><span class="go">enter →</span>
+    <span class="name">Studio<br>Flash</span>
+    <span class="desc">product landing page · the M67 as a luxury object · swappable finishes</span>
+  </a>
+  <a class="card" href="/sites/cs16-crt/">
+    <span class="num">05</span><span class="go">enter →</span>
+    <span class="name">1.6<br>Terminal</span>
+    <span class="desc">1998 CRT boot sequence · wireframe nade on a phosphor grid · type THROW</span>
+  </a>
+</div>
+<footer><span>flsh.me — flash responsibly</span><span>all sound is synthesized live · no assets were harmed</span></footer>
+</body>
+</html>
